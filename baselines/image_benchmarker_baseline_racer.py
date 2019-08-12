@@ -35,8 +35,8 @@ class BaselineRacer(object):
         img_rgb_1d = np.fromstring(response[0].image_data_uint8, dtype=np.uint8) 
         img_rgb = img_rgb_1d.reshape(response[0].height, response[0].width, 3)
         self.image_benchmark_total_time += time.time() - iter_start_time
-        cv2.imshow("img_rgb", img_rgb)
-        cv2.waitKey(1)
+        # cv2.imshow("img_rgb", img_rgb)
+        # cv2.waitKey(1)
         avg_fps = 1.0 / ((self.image_benchmark_total_time) / float(self.image_benchmark_num_images))
         print(self.level_name + ": {} avg_fps for {} num of images".format(avg_fps, self.image_benchmark_num_images))
 
@@ -122,7 +122,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--level_name', type=str, choices=["Soccer_Field_Easy", "Soccer_Field_Medium", "ZhangJiaJie_Medium", "Building99_Hard"], default="Soccer_Field_Easy")
+    parser.add_argument('--level_name', type=str, choices=["Soccer_Field_Easy", "Soccer_Field_Medium", "ZhangJiaJie_Medium", "Building99_Hard"], default="Soccer_Field_Medium")
     parser.add_argument('--planning_baseline_type', type=str, choices=["all_gates_at_once","all_gates_one_by_one"], default="all_gates_at_once")
     parser.add_argument('--planning_and_control_api', type=str, choices=["moveOnSpline", "moveOnSplineVelConstraints"], default="moveOnSpline")
     parser.add_argument('--plot_transform', dest='plot_transform', action='store_true', default=True)
