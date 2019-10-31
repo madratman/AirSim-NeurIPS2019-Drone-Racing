@@ -199,12 +199,8 @@ Please read [the race monitoring section](https://github.com/microsoft/AirSim-Ne
 		--enable_viz_traj \
 		--level_name Qualifier_Tier_1
 	```
-	- This method is an Iterative Best Response (IBR) trajectory planning technique. In IBR, first the trajectories of both drones are initialized as straight down the track at maximum speed (to win the game!). The opponent trajectory is then held constant while we solve for the ego trajectory via Model Predictive Control (MPC) optimization (details in gtp.py). Then, we hold the ego trajectory constant and solve for a guess of the opponent's trajectory in the same fashion. If after some iterations, the solution convereges (i.e., the resulting trajectories stop changing), we have reached a Nash equilibrium over the space of trajectories. That is to say, either agents can not unilaterally change their trajectory to increase their own performance. This implementation is a heuristic based on the original method proposed in the paper below. 
-		```
-		R. Spica, D. Falanga, E. Cristofalo, E. Montijano, D. Scaramuzza, and M. Schwager,    
-		"[A Real-Time Game Theoretic Planner for Autonomous Two-Player Drone Racing](https://arxiv.org/abs/1801.02302)",    
-		in the Proccedings of Robotics: Science and Systems (RSS), 2018. 
-		```
+	- This method is an Iterative Best Response (IBR) trajectory planning technique. In IBR, first the trajectories of both drones are initialized as straight down the track at maximum speed (to win the game!). The opponent trajectory is then held constant while we solve for the ego trajectory via Model Predictive Control (MPC) optimization (details in [gtp.py](baselines/gtp.py)). Then, we hold the ego trajectory constant and solve for a guess of the opponent's trajectory in the same fashion. If after some iterations, the solution convereges (i.e., the resulting trajectories stop changing), we have reached a Nash equilibrium over the space of trajectories. That is to say, either agents can not unilaterally change their trajectory to increase their own performance. This implementation is a heuristic based on the original method proposed in the paper listed below ([PDF available here](https://arxiv.org/abs/1801.02302)) 
+		- R. Spica, D. Falanga, E. Cristofalo, E. Montijano, D. Scaramuzza, and M. Schwager, "A Real-Time Game Theoretic Planner for Autonomous Two-Player Drone Racing", in the Proccedings of Robotics: Science and Systems (RSS), 2018. 
 
 ## Quick API overview 
 - Changing unreal environments  
