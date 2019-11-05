@@ -131,11 +131,15 @@ class BaselineRacerGTP(BaselineRacer):
             # self.fig.ylim(state[self.drone_i][0] - 10, state[self.drone_i][0] + 10)
 
     def run(self):
+        # get gate information
         self.get_ground_truth_gate_poses()
+        # scale inner gate dimensions
+        gate_obj_list = self.airsim_client.simListSceneObjects("Gate.*")
+        gate_obj_scale = self.airsim_client.simGetObjectScale(gate_obj_list[0])
+        self.gate_dimensions = airsim.Vector3r(x_val=1.6*gate_obj_scale.x_val, y_val=0.2*gate_obj_scale.y_val, z_val=1.6*gate_obj_scale.z_val)
 
-        # We pretend we have two different controllers for the drones,
-        # so let's instantiate  two
-        self.controller = gtp.IBRController(self.traj_params, self.drone_params, self.gate_poses_ground_truth)
+        # initialize the controller
+        self.controller = gtp.IBRController(self.traj_params, self.drone_params, self.gate_poses_ground_truth, self.gate_dimensions)
 
         if self.plot_gtp:
             # Let's plot the gates, and the fitted track.
@@ -154,7 +158,7 @@ class BaselineRacerGTP(BaselineRacer):
 def main(args):
     drone_names = ["drone_1", "drone_2"]
     drone_params = [
-        {"r_safe": 0.5,
+        {"r_safe": 0.75,
          "r_coll": 0.5,
          "v_max": 80.0,
          "a_max": 40.0},
@@ -167,11 +171,14 @@ def main(args):
     if (args.level_name == "Soccer_Field_Easy"):
         pass
     elif (args.level_name == "Soccer_Field_Medium"):
+        drone_params[0]["r_safe"] = 1.0
         drone_params[0]["v_max"] = 60.0
-        drone_params[0]["a_max"] = 35.0
+        drone_params[0]["a_max"] = 30.0
+        args.track_samples = 10000
     elif (args.level_name == "ZhangJiaJie_Medium"):
         drone_params[0]["v_max"] = 60.0
         drone_params[0]["a_max"] = 35.0
+        args.track_samples = 6000
     elif (args.level_name == "Building99_Hard"):
         drone_params[0]["v_max"] = 10.0
         drone_params[0]["a_max"] = 30.0
@@ -180,7 +187,9 @@ def main(args):
     elif (args.level_name == "Qualifier_Tier_2"):
         pass
     elif (args.level_name == "Qualifier_Tier_3"):
-        pass
+        drone_params[0]["v_max"] = 100.0
+        drone_params[0]["a_max"] = 50.0
+        args.track_samples = 6000
 
     # ensure you have generated the neurips planning settings file by running python generate_settings_file.py
     baseline_racer_gtp = BaselineRacerGTP(
@@ -203,6 +212,7 @@ if __name__ == "__main__":
     parser.add_argument('--dt', type=float, default=0.05)
     parser.add_argument('--n', type=int, default=14)
     parser.add_argument('--blocking_behavior', dest='blocking', action='store_true', default=False)
+    parser.add_argument('--track_samples', type=int, default=4096)
     parser.add_argument('--vel_constraints', dest='vel_constraints', action='store_true', default=False)
     parser.add_argument('--plot_gtp', dest='plot_gtp', action='store_true', default=False)
     parser.add_argument('--level_name', type=str, choices=["Soccer_Field_Easy", "Soccer_Field_Medium", "ZhangJiaJie_Medium", "Building99_Hard", 

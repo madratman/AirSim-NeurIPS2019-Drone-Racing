@@ -4,9 +4,6 @@ import cvxpy as cp
 import numpy as np
 import time
 
-gate_dimensions = [1.6, 1.6]
-gate_facing_vector = airsim.Vector3r(x_val=0, y_val=1, z_val=0)
-
 def rotate_vector(q, v):
     v_quat = v.to_Quaternionr()
     v_rotated_ = q * v_quat * q.inverse()
@@ -17,7 +14,7 @@ class SplinedTrack:
     A spline is fitted through the Gates with tangential constraints.
     This spline is then sampled at 2048 points.
     """
-    def __init__(self, gate_poses):
+    def __init__(self, gate_poses, gate_dimensions, track_samples):
         self.gates = gate_poses
 
         self.n_gates = np.size(gate_poses, 0)
@@ -29,19 +26,20 @@ class SplinedTrack:
         # tangents from quaternion
         # by rotating default gate direction with quaternion
         self.tangents = np.zeros(shape=(self.n_gates, 3))
+        gate_facing_vector = airsim.Vector3r(x_val=0, y_val=1, z_val=0)
         for i, pose in enumerate(gate_poses):
             self.tangents[i, :] = rotate_vector(pose.orientation, gate_facing_vector).to_numpy_array()
         self.track_spline = CubicHermiteSpline(self.arc_length, positions, self.tangents, axis=0)
 
         # gate width to track (half) width
-        gate_widths = [gate_dimensions[0] / 2.0 for gate in gate_poses]
-        gate_heights = [gate_dimensions[1] / 2.0 for gate in gate_poses]
+        gate_widths = [gate_dimensions.x_val / 2.0 for gate in gate_poses]
+        gate_heights = [gate_dimensions.z_val / 2.0 for gate in gate_poses]
 
         self.track_width_spline = CubicSpline(self.arc_length, gate_widths, axis=0)
         self.track_height_spline = CubicSpline(self.arc_length, gate_heights, axis=0)
 
-        # sample 2048 points, the 2048 are arbitrary and should really be a parameter
-        taus = np.linspace(self.arc_length[0], self.arc_length[-1], 2**12)
+        # sample track_params points
+        taus = np.linspace(self.arc_length[0], self.arc_length[-1], track_samples)
 
         self.track_centers = self.track_spline(taus)
         self.track_tangents = self.track_spline.derivative(nu=1)(taus)
@@ -98,19 +96,19 @@ class IBRController:
        v_max       Maximal velocity, determines how far waypoints can be apart
        a_max       Maximal acceleration, not used here.
     """
-    def __init__(self, params, drone_params, gate_poses):
+    def __init__(self, params, drone_params, gate_poses, gate_dimensions):
         self.dt = params.dt
         self.n_steps = params.n
         self.blocking = params.blocking
         self.drone_params = drone_params
-        self.track = SplinedTrack(gate_poses)
+        self.track = SplinedTrack(gate_poses, gate_dimensions, params.track_samples)
 
         # These are some parameters that could be tuned.
         # They control how the safety penalty and the relaxed constraints are weighted.
         self.nc_weight = 2.0
         self.nc_relax_weight = 128.0
-        self.track_relax_weight = 128.0  # possibly should be the largest of the gains?
-        self.blocking_weight = 16.0  # increasing gain increases the aggressiveness in the blocking behavior
+        self.track_relax_weight = 256.0  # possibly should be the largest of the gains?
+        self.blocking_weight = 4.0  # increasing gain increases the aggressiveness in the blocking behavior
 
     def init_trajectory(self, i_0, p_0):
         """Initialize Trajectory along the track tangent
