@@ -20,9 +20,9 @@ class BaselineRacerImageBenchmarker(BaselineRacer):
         self.image_benchmark_total_time = 0.0
         self.image_callback_thread = None
         if img_benchmark_type == "simGetImage":
-            self.image_callback_thread = threading.Thread(target=self.repeat_timer_img, args=(self.image_callback_benchmark_simGetImage, 0.05))
+            self.image_callback_thread = threading.Thread(target=self.repeat_timer_img, args=(self.image_callback_benchmark_simGetImage, 0.001))
         if img_benchmark_type == "simGetImages":
-            self.image_callback_thread = threading.Thread(target=self.repeat_timer_img, args=(self.image_callback_benchmark_simGetImages, 0.05))
+            self.image_callback_thread = threading.Thread(target=self.repeat_timer_img, args=(self.image_callback_benchmark_simGetImages, 0.001))
         self.is_image_thread_active = False
 
     def start_img_benchmark_thread(self):
